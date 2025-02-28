@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-producer-perf-test
+  labels:
+    app: kafka-producer-perf-test
+spec:
+  selector:
+    matchLabels:
+      app: kafka-producer-perf-test
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: kafka-producer-perf-test
+    spec:
+      containers:
+        - name: "kafka-producer-perf-test"
+          image: "registry.redhat.io/amq-streams/kafka-38-rhel9:2.8.0"
+          env:
+            - name: "KAFKA_PRODUCER_PERF_TEST_THROUGHPUT"
+              valueFrom:
+                configMapKeyRef:
+                  name: "kafka-producer-perf-test-configmap"
+                  key: "throughput"
+            - name: "KAFKA_PRODUCER_PERF_TEST_RECORD_SIZE"
+              valueFrom:
+                configMapKeyRef:
+                  name: "kafka-producer-perf-test-configmap"
+                  key: "record-size"
+            - name: "KAFKA_PRODUCER_PERF_TEST_TOPIC"
+              valueFrom:
+                configMapKeyRef:
+                  name: "kafka-producer-perf-test-configmap"
+                  key: "topic"
+            - name: "KAFKA_PRODUCER_PERF_TEST_NUM_RECORDS"
+              valueFrom:
+                configMapKeyRef:
+                  name: "kafka-producer-perf-test-configmap"
+                  key: "num-records"
+          command:
+            - "/opt/kafka/bin/kafka-producer-perf-test.sh"
+          args:
+            - "--producer.config"
+            - "/etc/config/kafka-producer.properties"
+            - "--throughput"
+            - "$(KAFKA_PRODUCER_PERF_TEST_THROUGHPUT)"
+            - "--record-size"
+            - "$(KAFKA_PRODUCER_PERF_TEST_RECORD_SIZE)"
+            - "--topic"
+            - "$(KAFKA_PRODUCER_PERF_TEST_TOPIC)"
+            - "--num-records"
+            - "$(KAFKA_PRODUCER_PERF_TEST_NUM_RECORDS)"
+            - "--print-metrics"
+          volumeMounts:
+            - name: "kafka-producer-perf-test-configmap-vol"
+              mountPath: "/etc/config"
+              readOnly: true
+      volumes:
+        - name: "kafka-producer-perf-test-configmap-vol"
+          configMap:
+            name: "kafka-producer-perf-test-configmap"
+            items:
+              - key: "kafka-producer.properties"
+                path: "kafka-producer.properties"

@@ -1,0 +1,15 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kafka-producer-perf-test-configmap
+  labels:
+    app: strimzi
+data:
+  throughput: "-1"
+  record-size: "64000"
+  topic: "demo.topic01"
+  num-records: "9223372036854775807"
+  kafka-producer.properties: |
+    batch.size=16384
+    bootstrap.servers=my-cluster-kafka-bootstrap.streams:9092
+    compression.type=snappy
